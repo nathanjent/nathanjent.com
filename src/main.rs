@@ -28,7 +28,7 @@ fn handle() -> common::Result<()> {
     if let Ok(request) = common::build_request_from_env(io::stdin()) {
         //println!("{:?}", request);
         common::route(&request, io::stdout(), || {
-            let default_response = Response::builder().status(200)
+            let default_response = Response::builder().status(404)
                 .body(&b""[..])
                 .unwrap();
             match request.uri().path() {
