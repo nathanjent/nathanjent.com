@@ -1,0 +1,28 @@
+[package]
+authors = ["nathanjent <nathanjent@gmail.com>"]
+name = "nathanjent"
+version = "0.1.0"
+
+[dependencies]
+dotenv = "0.8.0"
+serde = "1.0.11"
+serde_derive = "1.0.11"
+serde_json = "1.0.2"
+
+[dependencies.backend]
+path = "backend"
+version = "0.1.0"
+
+[dependencies.common]
+path = "common"
+version = "0.1.0"
+
+[dependencies.frontend]
+path = "frontend"
+version = "0.1.0"
+
+[dependencies.http]
+git = "https://github.com/carllerche/http"
+
+[workspace]
+members = ["common", "frontend", "backend"]
