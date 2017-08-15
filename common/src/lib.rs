@@ -24,9 +24,7 @@ pub fn build_request_from_env<R>(r: R) -> Result<Request<R>>
                 }
             },
             "REQUEST_METHOD" => {
-                if let Ok(method) = http::Method::from_bytes(v.as_bytes()) {
-                    request_builder.method(method);
-                }
+                request_builder.method(&*v);
             },
             "SERVER_PROTOCOL" => {
                 let version = match &*v {
@@ -43,7 +41,7 @@ pub fn build_request_from_env<R>(r: R) -> Result<Request<R>>
             },
             _ => {
                 if let Some(k) = k.split("HTTP_").nth(1) {
-                    request_builder.header(k, v.as_bytes());
+                    request_builder.header(k, &*v);
                 }
             },
         }
@@ -77,11 +75,8 @@ pub fn route<'r, W, F, REQ, RES>(req: &Request<REQ>, mut out: W, f: F) -> Result
             match response.status() {
                 http::status::ACCEPTED => {
                 },
-                status @ http::status::BAD_REQUEST => {
-                    writeln!(out, "Status: {}",  status)?;
-                },
-                status @ http::status::NOT_FOUND => {
-                    writeln!(out, "Status: {}",  status)?;
+                s @ http::status::BAD_REQUEST | s @ http::status::NOT_FOUND => {
+                    writeln!(out, "Status: {}",  s)?;
                 },
                 _ => {},
             }
