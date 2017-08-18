@@ -29,9 +29,9 @@ pub fn build_request_from_env<R>(r: R) -> Result<Request<R>>
             "SERVER_PROTOCOL" => {
                 let version = match &*v {
                     "HTTP/0.9" => http::version::HTTP_09,
-                    "HTTP/1.0" => http::version::HTTP_10,
+                    "HTTP/1.0" | "HTTP/1" => http::version::HTTP_10,
                     "HTTP/1.1" => http::version::HTTP_11,
-                    "HTTP/2" => http::version::HTTP_2,
+                    "HTTP/2.0" | "HTTP/2" => http::version::HTTP_2,
                     _ => http::version::HTTP_10,
                 };
                 request_builder.version(version);
