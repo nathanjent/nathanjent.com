@@ -33,17 +33,12 @@ sudo apt-get -y install phpmyadmin
 # setup hosts file
 VHOST=$(cat <<EOF
 <VirtualHost *:80>
-    DocumentRoot "/var/www/${PROJECTFOLDER}"
-    <Directory "/var/www/${PROJECTFOLDER}">
+    DocumentRoot "/var/www/${PROJECTFOLDER}/"
+    <Directory "/var/www/${PROJECTFOLDER}/">
         AllowOverride All
         Require all granted
-    </Directory>
-    ScriptAlias /cgi-bin/ /usr/lib/cgi-bin/
-    <Directory "/usr/lib/cgi-bin">
-        AllowOverride None
         Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch
-        Order allow,deny
-        Allow from all
+        AddHandler cgi-script .cgi
     </Directory>
 </VirtualHost>
 EOF

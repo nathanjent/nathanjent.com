@@ -35,28 +35,18 @@ fn handle() -> common::Result<()> {
                 .status(404)
                 .body(&b""[..])
                 .unwrap();
-            match request.uri().path() {
-                "/" => {
-                    match request.method() {
-                        &http::method::GET => {
-                            Response::builder()
-                                .status(200)
-                                .body(&b"hello"[..])
-                                .unwrap()
-                        }
-                        _ => default_response,
-                    }
+            match (request.method(), request.uri().path()) {
+                (&http::method::GET, "/") => {
+                    Response::builder()
+                        .status(200)
+                        .body(&b"hello"[..])
+                        .unwrap()
                 }
-                "/world" => {
-                    match request.method() {
-                        &http::method::GET => {
-                            Response::builder()
-                                .status(200)
-                                .body(&b"Hello world!"[..])
-                                .unwrap()
-                        }
-                        _ => default_response,
-                    }
+                (&http::method::GET, "/world") => {
+                    Response::builder()
+                        .status(200)
+                        .body(&b"Hello world!"[..])
+                        .unwrap()
                 }
                 _ => default_response,
             }
