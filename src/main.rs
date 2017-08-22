@@ -32,20 +32,26 @@ fn handle() -> common::Result<()> {
         //println!("{:?}", request);
         common::route(&request, io::stdout(), || {
             let default_response = Response::builder()
-                .status(404)
+                .status(http::status::NOT_FOUND)
                 .body(&b""[..])
                 .unwrap();
-            match (request.method(), request.uri().path()) {
-                (&http::method::GET, "/") => {
+            match (request.method(), request.uri().path(), request.uri().query()) {
+                (&http::method::GET, "/", None) => {
                     Response::builder()
-                        .status(200)
+                        .status(http::status::OK)
                         .body(&b"hello"[..])
                         .unwrap()
                 }
-                (&http::method::GET, "/world") => {
+                (&http::method::GET, "/world", None) => {
                     Response::builder()
-                        .status(200)
+                        .status(http::status::OK)
                         .body(&b"Hello world!"[..])
+                        .unwrap()
+                }
+                (&http::method::GET, "/world", Some(query)) => {
+                    Response::builder()
+                        .status(http::status::OK)
+                        .body(&query.as_bytes()[..])
                         .unwrap()
                 }
                 _ => default_response,
