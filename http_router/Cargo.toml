@@ -1,9 +1,9 @@
 [package]
-authors = ["nathanjent <nathanjent@gmail.com>"]
-name = "frontend"
+authors = ["Nathan Jent <n.jent@edaptive.com>"]
+name = "http_router"
 version = "0.1.0"
-
 [dependencies]
+regex = "0.2.2"
 
 [dependencies.common]
 path = "../common"
