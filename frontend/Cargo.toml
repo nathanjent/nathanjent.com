@@ -4,6 +4,7 @@ name = "frontend"
 version = "0.1.0"
 
 [dependencies]
+query_params = "0.1.0"
 
 [dependencies.common]
 path = "../common"

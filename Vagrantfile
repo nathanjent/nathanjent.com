@@ -34,6 +34,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
     # install other development tools to compile C libraries
     sudo apt-get install -y build-essential
+    sudo apt-get install -y libmysqlclient-dev
   RUST
 
 end

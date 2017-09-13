@@ -5,9 +5,8 @@ version = "0.1.0"
 
 [dependencies]
 dotenv = "0.8.0"
-serde = "1.0.11"
+http = "0.1.0"
 serde_derive = "1.0.11"
-serde_json = "1.0.2"
 
 [dependencies.backend]
 path = "backend"
@@ -17,6 +16,14 @@ version = "0.1.0"
 path = "common"
 version = "0.1.0"
 
+[dependencies.diesel]
+features = ["mysql"]
+version = "0.16.0"
+
+[dependencies.diesel_codegen]
+features = ["mysql"]
+version = "0.16.0"
+
 [dependencies.frontend]
 path = "frontend"
 version = "0.1.0"
@@ -24,9 +31,6 @@ version = "0.1.0"
 [dependencies.http_router]
 path = "http_router"
 version = "0.1.0"
-
-[dependencies.http]
-git = "https://github.com/carllerche/http"
 
 [workspace]
 members = ["common", "frontend", "backend", "http_router"]

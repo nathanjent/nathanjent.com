@@ -1,5 +1,5 @@
 use chrono;
-use http::{self, Request, Response};
+use http::{self, StatusCode, Request, Response, Version};
 use std::time::{Duration, Instant};
 use std::{env, panic};
 use std::io::{self, Read, Write};
@@ -24,11 +24,11 @@ pub fn build_request_from_env<R>(r: R) -> Result<Request<R>>
             },
             "SERVER_PROTOCOL" => {
                 let version = match &*v {
-                    "HTTP/0.9" => http::version::HTTP_09,
-                    "HTTP/1.0" | "HTTP/1" => http::version::HTTP_10,
-                    "HTTP/1.1" => http::version::HTTP_11,
-                    "HTTP/2.0" | "HTTP/2" => http::version::HTTP_2,
-                    _ => http::version::HTTP_10,
+                    "HTTP/0.9" => Version::HTTP_09,
+                    "HTTP/1.0" | "HTTP/1" => Version::HTTP_10,
+                    "HTTP/1.1" => Version::HTTP_11,
+                    "HTTP/2.0" | "HTTP/2" => Version::HTTP_2,
+                    _ => Version::HTTP_10,
                 };
                 request_builder.version(version);
             },
@@ -69,9 +69,9 @@ pub fn route<'r, W, F, REQ, RES>(req: &Request<REQ>, mut out: W, f: F) -> Result
     match response {
         Ok(mut response) => {
             match response.status() {
-                http::status::ACCEPTED => {
+                StatusCode::ACCEPTED => {
                 },
-                s @ http::status::BAD_REQUEST | s @ http::status::NOT_FOUND => {
+                s @ StatusCode::BAD_REQUEST | s @ StatusCode::NOT_FOUND => {
                     writeln!(out, "Status: {}",  s)?;
                 },
                 _ => {},

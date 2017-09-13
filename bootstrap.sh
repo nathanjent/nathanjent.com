@@ -2,10 +2,13 @@
 
 # Use single quotes instead of double quotes to make it work with special-character passwords
 PASSWORD='12345678'
-PROJECTFOLDER='nathanjent'
+PROJECT='nathanjent'
 
 # create project folder
-sudo mkdir "/var/www/${PROJECTFOLDER}"
+PROJECTPATH="/var/www/${PROJECT}"
+if [[ ! -d "${PROJECTPATH}" ]]; then
+    sudo mkdir -p "${PROJECTPATH}"
+fi
 
 # update / upgrade
 sudo apt-get update
@@ -54,3 +57,11 @@ sudo a2enmod cgi
 # restart apache
 sudo service apache2 restart
 
+# setup mysql
+DBSETUP=$(cat <<EOF
+CREATE DATABASE IF NOT EXISTS `test`;
+GRANT ALL ON `test`.* TO 'nathanjent'@'localhost' IDENTIFIED BY 'firetruck';
+EOF
+)
+echo "${DBSETUP}" > /vagrant/db_setup.sql
+mysql -uroot -p"${PASSWORD}" < /vagrant/db_setup.sql

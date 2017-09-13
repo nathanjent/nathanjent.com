@@ -6,6 +6,8 @@ DEPLOY_DIR = www/nathanjent
 build:
 	@$(CARGO) build
 	cp -f $(DEBUG_DIR)/nathanjent $(DEPLOY_DIR)/index.cgi
+	cp -f static/.htaccess $(DEPLOY_DIR)/
+	cp -f static/.env $(DEPLOY_DIR)/
 
 release:
 	@$(CARGO) build --release
