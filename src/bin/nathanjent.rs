@@ -30,7 +30,6 @@ fn main() {
 }
 
 fn handle() -> common::Result<()> {
-    use schema::notes::dsl::*;
     let conn = establish_connection();
 
     let mut out = String::new();
@@ -53,6 +52,7 @@ fn handle() -> common::Result<()> {
                         .body(&b"Hello world!"[..])
                 }
                 (&Method::GET, "/note", Some(query_str)) => {
+                    use schema::notes::dsl::*;
                     let mut res_builder = Response::builder();
                     res_builder.status(StatusCode::BAD_REQUEST);
                     if let Ok(query) = query_str.parse::<Query>() {
@@ -75,11 +75,31 @@ fn handle() -> common::Result<()> {
                     res_builder.body(&out.as_bytes()[..])
                 }
                 (&Method::POST, "/note", Some(query_str)) => {
-                    let query = query_str.parse::<Query>();
+                    use schema::notes::dsl::{notes, id};
+                    let mut res_builder = Response::builder();
+                    res_builder.status(StatusCode::BAD_REQUEST);
+                    if let Ok(query) = query_str.parse::<Query>() {
+                        let query: Query = query;
+                        if let Some(title) = query.get_first("title") {
+                            if let Some(text) = query.get_first("text") {
+                                let new_note = NewNote {
+                                    title,
+                                    text,
+                                };
 
-                    Response::builder()
-                        .status(StatusCode::OK)
-                        .body(&b"Can't post."[..])
+                                let result = diesel::insert(&new_note)
+                                    .into(notes)
+                                    .execute(&conn);
+                                    
+                                if let Ok(result) = result {
+                                    res_builder.status(StatusCode::OK);
+                                } else {
+                                    res_builder.status(StatusCode::NOT_FOUND);
+                                }
+                            }
+                        }
+                    }
+                    res_builder.body(&b""[..])
                 }
                 _ => {
                     Response::builder()

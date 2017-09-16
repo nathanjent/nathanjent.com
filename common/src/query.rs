@@ -57,6 +57,7 @@ impl FromStr for Query {
 
                 value = value.trim_left_matches('=');
 
+                // TODO%20handle%20encoded%20text
                 let v = query_map.entry(key.into()).or_insert(QueryValue::new());
                 for i in value.split(',') {
                     v.push(i.into());
