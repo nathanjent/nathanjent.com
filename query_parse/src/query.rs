@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use super::decode;
 
 /// An alias type of `Vec<String>`.
 use std::str::FromStr;
@@ -8,6 +9,7 @@ pub type QueryValue = Vec<String>;
 /// An alias type of `HashMap<String, QueryValue>`.
 type QueryMap = HashMap<String, QueryValue>;
 
+#[derive(Debug)]
 pub struct Query {
     map: QueryMap,
 }
@@ -47,8 +49,12 @@ impl FromStr for Query {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut query_map = QueryMap::new();
 
-        for item in s.split(|c| c == '&' || c == ';') {
-            if let Some(index) = item.find('=') {
+        if let Ok(decoded) = decode(s) {
+            for item in decoded.split(|c| c == '&' || c == ';') {
+                let mut index = 0;
+                if let Some(i) = item.find('=') {
+                    index = i;
+                }
                 let (key, mut value) = item.split_at(index);
 
                 if value.is_empty() {
@@ -57,8 +63,8 @@ impl FromStr for Query {
 
                 value = value.trim_left_matches('=');
 
-                // TODO%20handle%20encoded%20text
-                let v = query_map.entry(key.into()).or_insert(QueryValue::new());
+                let v = query_map.entry(key.into())
+                    .or_insert(QueryValue::new());
                 for i in value.split(',') {
                     v.push(i.into());
                 }

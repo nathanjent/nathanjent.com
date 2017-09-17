@@ -1,0 +1,7 @@
+[package]
+authors = ["nathanjent <nathanjent@gmail.com>"]
+name = "query_parse"
+version = "0.1.0"
+
+[dependencies]
+urlencoding = "1.0"

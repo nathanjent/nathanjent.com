@@ -33,4 +33,4 @@ path = "http_router"
 version = "0.1.0"
 
 [workspace]
-members = ["common", "frontend", "backend", "http_router"]
+members = ["common", "frontend", "backend", "http_router", "query_parse"]

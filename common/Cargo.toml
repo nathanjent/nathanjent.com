@@ -11,3 +11,7 @@ http = "0.1.0"
 [dependencies.diesel]
 version = "0.16.0"
 features = ["mysql"]
+
+[dependencies.query_parse]
+path = "../query_parse"
+version = "0.1.0"
