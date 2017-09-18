@@ -14,6 +14,13 @@ fi
 sudo apt-get update
 sudo apt-get -y upgrade
 
+# curl for fetching Rustup
+sudo apt-get -y install curl
+
+# install development tools for C libraries
+sudo apt-get install -y build-essential
+sudo apt-get install -y libmysqlclient-dev
+
 # install apache 2.5 and php 5.5
 sudo apt-get install -y apache2
 sudo apt-get install -y php5
@@ -33,7 +40,7 @@ sudo debconf-set-selections <<< "phpmyadmin phpmyadmin/mysql/app-pass password $
 sudo debconf-set-selections <<< "phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2"
 sudo apt-get -y install phpmyadmin
 
-# setup hosts file
+# setup hosts file for Apache server
 VHOST=$(cat <<EOF
 <VirtualHost *:80>
     DocumentRoot "/var/www/${PROJECTFOLDER}/"
@@ -48,20 +55,24 @@ EOF
 )
 echo "${VHOST}" > /etc/apache2/sites-available/000-default.conf
 
+rm -rf /var/www/html
+
 # enable mod_rewrite
 sudo a2enmod rewrite
 
 # enable mod_cgi
 sudo a2enmod cgi
 
-# restart apache
+# restart Apache
 sudo service apache2 restart
 
-# setup mysql
+# setup mysql user
+# the username and password should match the DATABASE_URL variable in the .evn file
 DBSETUP=$(cat <<EOF
-CREATE DATABASE IF NOT EXISTS `test`;
-GRANT ALL ON `test`.* TO 'nathanjent'@'localhost' IDENTIFIED BY 'firetruck';
+CREATE DATABASE IF NOT EXISTS test;
+GRANT ALL ON test.* TO 'nathanjent'@'localhost' IDENTIFIED BY 'firetruck';
 EOF
 )
 echo "${DBSETUP}" > /vagrant/db_setup.sql
 mysql -uroot -p"${PASSWORD}" < /vagrant/db_setup.sql
+

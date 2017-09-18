@@ -7,7 +7,6 @@ extern crate http;
 use nathanjent::*;
 use self::models::*;
 use diesel::prelude::*;
-use dotenv::dotenv;
 use http::{Method, StatusCode, Request, Response};
 use std::io::{self, Write};
 use common::Query;
@@ -33,8 +32,8 @@ fn handle() -> common::Result<()> {
     let conn = establish_connection();
 
     let mut out = String::new();
-    if let Ok(ref mut request) = common::build_request_from_env(io::stdin()) {
-        common::route(&request, io::stdout(), || {
+    if let Ok(ref mut request) = common::build_request_from_env() {
+        common::send_response(&request, io::stdout(), || {
             let request_triple = (
                 request.method(),
                 request.uri().path(),

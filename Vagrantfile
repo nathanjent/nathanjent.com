@@ -29,12 +29,14 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.provision "shell", privileged: false, inline: <<-RUST
     # install rust compiler
-    sudo apt-get -y install curl
     curl https://sh.rustup.rs -sSf | sh -s -- -y
+  RUST
 
-    # install other development tools to compile C libraries
-    sudo apt-get install -y build-essential
-    sudo apt-get install -y libmysqlclient-dev
+  config.vm.provision "shell", privileged: false, inline: <<-RUST
+    # setup diesel and tables
+    cargo install diesel_cli --no-default-features --features mysql
+    cd /vagrant
+    diesel migration run
   RUST
 
 end

@@ -28,4 +28,8 @@ clean:
 	@$(CARGO) clean
 	rm -rf $(DEPLOY_DIR)/*
 
+# Call this outside of VM only
+vagrant:
+	vagrant ssh -c 'make -C /vagrant'
+
 .PHONY: all build doc check test bench clean

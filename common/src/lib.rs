@@ -10,7 +10,7 @@ mod static_content;
 
 pub use errors::Error;
 pub use static_content::get_page;
-pub use request::{build_request_from_env, route};
+pub use request::{build_request_from_env, send_response};
 pub use query_parse::{Query, QueryValue};
 
 pub type Result<T> = std::result::Result<T, errors::Error>;

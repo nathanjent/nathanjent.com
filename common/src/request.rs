@@ -6,9 +6,7 @@ use std::io::{self, Read, Write};
 
 use super::Result;
 
-pub fn build_request_from_env<R>(r: R) -> Result<Request<R>>
-    where R: Read
-{
+pub fn build_request_from_env() -> Result<Request<io::Stdin>> {
     let mut request_builder = Request::builder();
     let mut content_length = 0;
 
@@ -43,11 +41,12 @@ pub fn build_request_from_env<R>(r: R) -> Result<Request<R>>
         }
     }
 
-    let request: Request<R> = request_builder.body(r)?;
+    
+    let request: Request<io::Stdin> = request_builder.body(io::stdin())?;
     Ok(request)
 }
 
-pub fn route<'r, W, F, REQ, RES>(req: &Request<REQ>, mut out: W, f: F) -> Result<()>
+pub fn send_response<'r, W, F, REQ, RES>(req: &Request<REQ>, mut out: W, f: F) -> Result<()>
     where W: Write,
           REQ: Read,
           RES: Read,
