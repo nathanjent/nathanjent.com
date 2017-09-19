@@ -5,7 +5,7 @@ PASSWORD='12345678'
 PROJECT='nathanjent'
 
 # create project folder
-PROJECTPATH="/var/www/${PROJECT}"
+PROJECTPATH="/var/www/${PROJECT}/"
 if [[ ! -d "${PROJECTPATH}" ]]; then
     sudo mkdir -p "${PROJECTPATH}"
 fi
@@ -13,6 +13,13 @@ fi
 # update / upgrade
 sudo apt-get update
 sudo apt-get -y upgrade
+
+# install curl to get rustup
+sudo apt-get -y install curl
+
+# install other development tools to compile C libraries
+sudo apt-get install -y build-essential
+sudo apt-get install -y libmysqlclient-dev
 
 # install apache 2.5 and php 5.5
 sudo apt-get install -y apache2
@@ -36,8 +43,8 @@ sudo apt-get -y install phpmyadmin
 # setup hosts file
 VHOST=$(cat <<EOF
 <VirtualHost *:80>
-    DocumentRoot "/var/www/${PROJECTFOLDER}/"
-    <Directory "/var/www/${PROJECTFOLDER}/">
+    DocumentRoot "${PROJECTPATH}"
+    <Directory "${PROJECTPATH}">
         AllowOverride All
         Require all granted
         Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch
@@ -57,11 +64,14 @@ sudo a2enmod cgi
 # restart apache
 sudo service apache2 restart
 
-# setup mysql
+# setup mysql test database and user
 DBSETUP=$(cat <<EOF
-CREATE DATABASE IF NOT EXISTS `test`;
-GRANT ALL ON `test`.* TO 'nathanjent'@'localhost' IDENTIFIED BY 'firetruck';
+CREATE DATABASE IF NOT EXISTS test;
+GRANT ALL ON test.* TO 'nathanjent'@'localhost' IDENTIFIED BY 'firetruck';
 EOF
 )
 echo "${DBSETUP}" > /vagrant/db_setup.sql
 mysql -uroot -p"${PASSWORD}" < /vagrant/db_setup.sql
+
+# the username and password should match the DATABASE_URL variable in .env for diesel
+echo DATABASE_URL=mysql://nathanjent:firetruck@localhost:3306/test > /vagrant/.env
