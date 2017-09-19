@@ -22,7 +22,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   # Define a push strategy for nathanjent.com
   config.push.define "staging", strategy: "sftp" do |push|
-      # TODO
+      # TODO push to ftp for site
       push.host = ""
       push.username = ""
   end
@@ -33,10 +33,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   RUST
 
   config.vm.provision "shell", privileged: false, inline: <<-RUST
-    # setup diesel and tables
+    # install diesel and run DB migrations
     cargo install diesel_cli --no-default-features --features mysql
     cd /vagrant
     diesel migration run
   RUST
-
 end

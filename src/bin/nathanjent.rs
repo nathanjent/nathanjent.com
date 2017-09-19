@@ -1,13 +1,12 @@
 extern crate nathanjent;
 extern crate common;
-extern crate dotenv;
 extern crate http;
 #[macro_use] extern crate diesel;
 
 use nathanjent::*;
 use self::models::*;
 use diesel::prelude::*;
-use http::{Method, StatusCode, Request, Response};
+use http::{Method, StatusCode, Response};
 use std::io::{self, Write};
 use common::Query;
 
@@ -74,7 +73,7 @@ fn handle() -> common::Result<()> {
                     res_builder.body(&out.as_bytes()[..])
                 }
                 (&Method::POST, "/note", Some(query_str)) => {
-                    use schema::notes::dsl::{notes, id};
+                    use schema::notes::dsl::notes;
                     let mut res_builder = Response::builder();
                     res_builder.status(StatusCode::BAD_REQUEST);
                     if let Ok(query) = query_str.parse::<Query>() {
