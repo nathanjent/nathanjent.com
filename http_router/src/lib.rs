@@ -1,5 +1,5 @@
-extern crate regex;
 extern crate http;
+extern crate route_recognizer;
 
 mod router;
 mod errors;
