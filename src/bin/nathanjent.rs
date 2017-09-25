@@ -44,6 +44,25 @@ fn handle() -> common::Result<()> {
                         .status(StatusCode::OK)
                         .body(&b"hello"[..])
                 }
+                (&Method::GET, "/env", None) => {
+                    out = ::std::env::vars()
+                        .map(|(k, v)| k + ":" + &v + "\r")
+                        .collect();
+                    Response::builder()
+                        .status(StatusCode::OK)
+                        .body(&out.as_bytes()[..])
+                }
+                (&Method::GET, "/headers", None) => {
+                    out = request.headers()
+                        .iter()
+                        .map(|(k, ref v)| {
+                            format!("{}:{}\r", k.as_str(), v.to_str().unwrap())
+                        })
+                        .collect();
+                    Response::builder()
+                        .status(StatusCode::OK)
+                        .body(&out.as_bytes()[..])
+                }
                 (&Method::GET, "/world", None) => {
                     Response::builder()
                         .status(StatusCode::OK)
