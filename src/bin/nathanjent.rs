@@ -1,14 +1,16 @@
 extern crate nathanjent;
 extern crate common;
+extern crate http_router;
 extern crate http;
 #[macro_use] extern crate diesel;
 
 use nathanjent::*;
 use self::models::*;
 use diesel::prelude::*;
-use http::{Method, StatusCode, Response};
+use http::{Method, StatusCode, Request, Response};
 use std::io::{self, Write};
 use common::Query;
+use http_router::RouteBuilder;
 
 fn main() {
     let status = match handle() {
@@ -27,8 +29,17 @@ fn main() {
     ::std::process::exit(status);
 }
 
+fn handle_id<'r>(req: &mut Request<&'r [u8]>) -> Result<Response<&'r [u8]>, http::Error> {
+    Response::builder()
+        .status(StatusCode::OK)
+        .body(&b""[..])
+}
+
 fn handle() -> common::Result<()> {
     let conn = establish_connection();
+
+    let mut builder = RouteBuilder::new();
+    builder.get("/id", handle_id);
 
     let mut out = String::new();
     if let Ok(ref mut request) = common::build_request_from_env() {

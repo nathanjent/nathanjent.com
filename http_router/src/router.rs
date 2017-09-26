@@ -1,5 +1,4 @@
-/// Router logic borrowed from Conduit-Router crate.
-///
+//! Router logic borrowed from Conduit-Router crate.
 use std::collections::hash_map::{HashMap, Entry};
 use std::error::Error;
 use std::fmt;
@@ -8,45 +7,15 @@ use std::io::{Read, Write};
 use route_recognizer::{Router, Match, Params};
 use http::{Method, Request, Response};
 
-//pub trait NewHandler: Sync + Send + 'static
-//{
-//    type Request;
-//    type Response;
-//    type Error: Send;
-//
-//    fn call(&self, request: &mut Self::Request) -> Result<Self::Response, Box<Self::Error>>;
-//}
-//
-//impl<F, E> NewHandler for F
-//where
-////I: Read + Sync + Send + 'static,
-//      //O: Write + Sync + Send + 'static,
-//      F: Fn(&mut Self::Request) -> Result<Self::Response, E> + Sync + Send + 'static,
-//      E: Error + Send + 'static
-//{
-//    type Request = Request<Read>;
-//    type Response = Response<Write>;
-//    type Error = E;
-//
-//    fn call(&self, request: &mut Self::Request) -> Result<Self::Response, Box<Self::Error>> {
-//        (*self)(request).map_err(|e| Box::new(e) as Box<Self::Error>)
-//    }
-//}
-
-
 /// A Handler takes a request and returns a response or an error.
 /// By default, a bare function implements `Handler`.
 pub trait Handler<I, O>: Sync + Send + 'static
-where I: Read,
-      O: Write
 {
     fn call(&self, request: &mut Request<I>) -> Result<Response<O>, Box<Error+Send>>;
 }
 
 impl<I, O, F, E> Handler<I, O> for F
-where I: Read,
-      O: Write,
-      F: Fn(&mut Request<I>) -> Result<Response<O>, E> + Sync + Send + 'static,
+where F: Fn(&mut Request<I>) -> Result<Response<O>, E> + Sync + Send + 'static,
       E: Error + Send + 'static
 {
     fn call(&self, request: &mut Request<I>) -> Result<Response<O>, Box<Error+Send>> {
@@ -62,8 +31,6 @@ pub struct RouteBuilder<I, O> {
 pub struct RouterError(String);
 
 impl<I, O> RouteBuilder<I, O>
-where I: Read,
-      O: Write
 {
     pub fn new() -> RouteBuilder<I,O> {
         RouteBuilder { routers: HashMap::new() }
@@ -118,8 +85,8 @@ where I: Read,
 }
 
 impl<I,O> Handler<I,O> for RouteBuilder<I,O>
-where I: Read + 'static,
-      O: Write + 'static
+where I: 'static,
+      O: 'static
 {
     fn call(&self, request: &mut Request<I>) -> Result<Response<O>, Box<Error+Send>> {
         let m = {
@@ -156,14 +123,12 @@ pub trait RequestParams<'a> {
 }
 
 pub fn params<'a, I>(req: &'a Request<I>) -> &'a Params
-where I: Read
 {
     req.extensions().get::<Params>()
         .expect("Missing params")
 }
 
 impl<'a, I> RequestParams<'a> for &'a Request<I>
-where I: Read
 {
     fn params(self) -> &'a Params {
         params(self)
