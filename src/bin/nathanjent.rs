@@ -10,10 +10,13 @@ use diesel::prelude::*;
 use http::{Method, StatusCode, Request, Response};
 use std::io::{self, Write};
 use common::Query;
-use http_router::RouteBuilder;
+use http_router::{Handler, RouteBuilder as Router};
 
 fn main() {
-    let status = match handle() {
+    let mut router = Router::new();
+    router.get("/id", handle_id);
+
+    let status = match start(router) {
         Ok(_) => 0,
         Err(e) => {
             writeln!(io::stdout(),
@@ -35,11 +38,10 @@ fn handle_id<'r>(req: &mut Request<&'r [u8]>) -> Result<Response<&'r [u8]>, http
         .body(&b""[..])
 }
 
-fn handle() -> common::Result<()> {
+fn start<'r, H>(handler: H) -> common::Result<()>
+    where H: Handler<&'r [u8], &'r [u8]> + 'static + Sync
+{
     let conn = establish_connection();
-
-    let mut builder = RouteBuilder::new();
-    builder.get("/id", handle_id);
 
     let mut out = String::new();
     if let Ok(ref mut request) = common::build_request_from_env() {

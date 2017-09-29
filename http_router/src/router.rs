@@ -2,7 +2,6 @@
 use std::collections::hash_map::{HashMap, Entry};
 use std::error::Error;
 use std::fmt;
-use std::io::{Read, Write};
 
 use route_recognizer::{Router, Match, Params};
 use http::{Method, Request, Response};
