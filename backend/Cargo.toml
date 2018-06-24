@@ -4,7 +4,30 @@ version = "0.1.0"
 authors = ["nathanjent <nathanjent@gmail.com>"]
 
 [dependencies]
+dotenv = "0.8.0"
+http = "0.1.5"
+serde_derive = "1.0.11"
+
+# Shared with frontend
+[dependencies.core]
+path = "../core"
+version = "0.1.0"
 
 [dependencies.common]
-path = "../common"
+path = "common"
 version = "0.1.0"
+
+[dependencies.diesel]
+features = ["mysql"]
+version = "0.16.0"
+
+[dependencies.diesel_codegen]
+features = ["mysql"]
+version = "0.16.0"
+
+[dependencies.http_router]
+path = "http_router"
+version = "0.1.0"
+
+[workspace]
+members = ["common", "frontend", "backend", "http_router", "query_parse"]

@@ -1,4 +1,12 @@
-/target/
+# Rust files
+**/target/
 **/*.rs.bk
-www/nathanjent/
+
+# Vagrant files
 /.vagrant/
+
+# Private configuration files
+.env
+
+# Generated files
+www/nathanjent/
