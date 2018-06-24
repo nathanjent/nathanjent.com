@@ -77,4 +77,4 @@ mysql -uroot -p"${PASSWORD}" < /vagrant/db_setup.sql
 rm /vagrant/db_setup.sql
 
 # the username and password should match the DATABASE_URL variable in .env for diesel
-echo DATABASE_URL=mysql://nathanjent:firetruck@localhost:3306/test > /vagrant/.env
+#echo DATABASE_URL=mysql://nathanjent:firetruck@localhost:3306/test > /vagrant/.env

@@ -3,6 +3,10 @@ extern crate comrak;
 extern crate diesel;
 extern crate http;
 extern crate query_parse;
+extern crate futures;
+extern crate tokio_core;
+extern crate tokio_io;
+extern crate tokio_file_unix;
 
 mod errors;
 mod request;

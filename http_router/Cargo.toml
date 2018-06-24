@@ -4,5 +4,6 @@ name = "http_router"
 version = "0.1.0"
 
 [dependencies]
+futures = "0.1.16"
 http = "0.1.0"
 route-recognizer = "0.1.12"

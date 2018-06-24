@@ -5,22 +5,8 @@ use std::fmt;
 
 use route_recognizer::{Router, Match, Params};
 use http::{Method, Request, Response};
+use handler::Handler;
 
-/// A Handler takes a request and returns a response or an error.
-/// By default, a bare function implements `Handler`.
-pub trait Handler<I, O>: Sync + Send + 'static
-{
-    fn call(&self, request: &mut Request<I>) -> Result<Response<O>, Box<Error+Send>>;
-}
-
-impl<I, O, F, E> Handler<I, O> for F
-where F: Fn(&mut Request<I>) -> Result<Response<O>, E> + Sync + Send + 'static,
-      E: Error + Send + 'static
-{
-    fn call(&self, request: &mut Request<I>) -> Result<Response<O>, Box<Error+Send>> {
-        (*self)(request).map_err(|e| Box::new(e) as Box<Error+Send>)
-    }
-}
 
 pub struct RouteBuilder<I, O> {
     routers: HashMap<Method, Router<Box<Handler<I, O>>>>,
