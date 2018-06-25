@@ -28,7 +28,7 @@ releasecgi:
 	cp -u static/.env $(DEPLOY_DIR)/
 
 bundleclient:
-	cd client ; \
+	cd frontend ; \
 		parcel build --out-dir ../$(DEPLOY_DIR) --public-url . src/index.html
 
 doc:

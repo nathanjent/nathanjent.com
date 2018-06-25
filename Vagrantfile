@@ -1,12 +1,12 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-# Load dotenv
+# Load dotenv to set custom environment variables
 begin
     require 'dotenv'
     Dotenv.load
 rescue LoadError => e
-    $stderr.puts "could not load .env file"
+    $stderr.puts "could not load .env file error: #{e}"
 end
 
 # Pass the config version
@@ -24,8 +24,40 @@ Vagrant.configure("2") do |config|
     config.vm.synced_folder "./", "/vagrant", type: "rsync"
     config.vm.synced_folder "./www/", "/var/www", type: "rsync"
 
-    # Define the bootstrap file: A (shell) script that runs after first setup of your box (= provisioning)
-    config.vm.provision :shell, path: "bootstrap.sh"
+    # Provision the basics 
+    config.vm.provision :shell,
+        path: "bootstrap_scripts/privileged/dev_tools.sh"
+    
+    # Provision apache
+    config.vm.provision :shell,
+        path: "bootstrap_scripts/privileged/apache.sh",
+        env: { "SITE_NAME" => ENV["SITE_NAME"] }
+
+    # Provision MySQL
+    config.vm.provision :shell,
+        path: "bootstrap_scripts/privileged/mysql.sh",
+        env: {
+            "DBROOT_PASS" => ENV["DATABASE_ROOT_PASS"],
+            "DBPASS" => ENV["DATABASE_PASS"],
+            "DBUSER" => ENV["DATABASE_USER"],
+        }
+
+    # Provision PHM MyAdmin
+    config.vm.provision :shell,
+        path: "bootstrap_scripts/privileged/phpmyadmin.sh",
+        env: {
+            "PHPPASS" => ENV["DATABASE_ROOT_PASS"],
+        }
+
+    # Provision Rust dev tools
+    config.vm.provision "shell",
+        privileged: false,
+        path: "bootstrap_scripts/rust.sh"
+
+    # Setup Diesel and run the migrations on the DB in the VM
+    config.vm.provision "shell",
+        privileged: false,
+        path: "bootstrap_scripts/diesel.sh"
 
     # Define a push strategy for nathanjent.com
     config.push.define "staging", strategy: "sftp" do |push|
@@ -33,16 +65,4 @@ Vagrant.configure("2") do |config|
         push.host = ENV["FTP_HOST"]
         push.username = ENV["FTP_USERNAME"]
     end
-
-    config.vm.provision "shell", privileged: false, inline: <<-RUST
-        # install rust compiler
-        curl https://sh.rustup.rs -sSf | sh -s -- -y
-    RUST
-
-    config.vm.provision "shell", privileged: false, inline: <<-RUST
-        # install diesel and run DB migrations
-        cargo install diesel_cli --no-default-features --features mysql
-        cd /vagrant
-        diesel migration run
-    RUST
 end
