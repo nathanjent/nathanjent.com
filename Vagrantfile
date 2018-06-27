@@ -19,23 +19,38 @@ Vagrant.configure("2") do |config|
     #config.vm.network "private_network", ip: "192.168.33.22"
     config.vm.network "forwarded_port", guest: 80, host: 8080, host_ip: "127.0.0.1"
 
+    # Set the hostname
+    config.vm.hostname = "dev-jessie64.vagrant"
+
+    # Enable agent forwarding via SSH
+    config.ssh.forward_agent = true
+
     # Share an additional folder to the guest VM. The first argument is the path on the host to the actual folder.
     # The second argument is the path on the guest to mount the folder.
-    config.vm.synced_folder "./", "/vagrant", type: "rsync"
-    config.vm.synced_folder "./www/", "/var/www", type: "rsync"
+    config.vm.synced_folder "./", "/vagrant",
+    #    type: "rsync"
+        type: "nfs",
+        nfs_udp: false,
+        nfs_version: 4
+
+    config.vm.synced_folder "./www/" + ENV["SITE_NAME"], "/var/www/" + ENV["SITE_NAME"],
+    #    type: "rsync"
+        type: "nfs",
+        nfs_udp: false,
+        nfs_version: 4
 
     # Provision the basics 
     config.vm.provision :shell,
-        path: "bootstrap_scripts/privileged/dev_tools.sh"
+        path: "bootstrap/dev_tools.sh"
     
     # Provision apache
     config.vm.provision :shell,
-        path: "bootstrap_scripts/privileged/apache.sh",
+        path: "bootstrap/apache.sh",
         env: { "SITE_NAME" => ENV["SITE_NAME"] }
 
     # Provision MySQL
     config.vm.provision :shell,
-        path: "bootstrap_scripts/privileged/mysql.sh",
+        path: "bootstrap/mysql.sh",
         env: {
             "DBROOT_PASS" => ENV["DATABASE_ROOT_PASS"],
             "DBPASS" => ENV["DATABASE_PASS"],
@@ -44,7 +59,7 @@ Vagrant.configure("2") do |config|
 
     # Provision PHM MyAdmin
     config.vm.provision :shell,
-        path: "bootstrap_scripts/privileged/phpmyadmin.sh",
+        path: "bootstrap/phpmyadmin.sh",
         env: {
             "PHPPASS" => ENV["DATABASE_ROOT_PASS"],
         }
@@ -52,12 +67,12 @@ Vagrant.configure("2") do |config|
     # Provision Rust dev tools
     config.vm.provision "shell",
         privileged: false,
-        path: "bootstrap_scripts/rust.sh"
+        path: "bootstrap/rust.sh"
 
     # Setup Diesel and run the migrations on the DB in the VM
     config.vm.provision "shell",
         privileged: false,
-        path: "bootstrap_scripts/diesel.sh"
+        path: "bootstrap/diesel.sh"
 
     # Define a push strategy for nathanjent.com
     config.push.define "staging", strategy: "sftp" do |push|
