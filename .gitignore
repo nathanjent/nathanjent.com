@@ -2,6 +2,9 @@
 **/target/
 **/*.rs.bk
 
+# JavaScript files
+**/node_modules/
+
 # Vagrant files
 /.vagrant/
 

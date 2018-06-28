@@ -1,10 +1,10 @@
-extern crate nathanjent;
+extern crate backend;
 extern crate common;
 extern crate http_router;
 extern crate http;
 #[macro_use] extern crate diesel;
 
-use nathanjent::*;
+use backend::*;
 use self::models::*;
 use diesel::prelude::*;
 use http::{Method, StatusCode, Request, Response};

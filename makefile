@@ -1,5 +1,6 @@
-DEBUG_DIR =  target/debug
-RELEASE_DIR = target/release
+BACKEND_DIR = backend
+DEBUG_DIR =  $(BACKEND_DIR)/target/debug
+RELEASE_DIR = $(BACKEND_DIR)/target/release
 DEPLOY_DIR = www/nathanjent
 WASM_DIR =  target/wasm32-unknown-unknown/release
 
@@ -14,9 +15,9 @@ release: releasecgi bundleclient
 clean: cleancgi cleanclient
 
 debugcgi:
-	cd backend ; \
+	cd $(BACKEND_DIR) ; \
 		cargo build ; 
-	cp -u backend/$(DEBUG_DIR)/nathanjent $(DEPLOY_DIR)/index.cgi ;
+	cp -u $(DEBUG_DIR)/nathanjent $(DEPLOY_DIR)/index.cgi ;
 	cp -u static/.htaccess $(DEPLOY_DIR)/ ;
 	cp -u static/.env $(DEPLOY_DIR)/
 
@@ -29,7 +30,8 @@ releasecgi:
 
 bundleclient:
 	cd frontend ; \
-		parcel build --out-dir ../$(DEPLOY_DIR) --public-url . src/index.html
+		yarn ; \
+		yarn parcel build --out-dir ../$(DEPLOY_DIR) --public-url . src/index.html
 
 doc:
 	cargo doc
