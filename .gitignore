@@ -4,6 +4,7 @@
 
 # JavaScript files
 **/node_modules/
+**/.cache/
 
 # Vagrant files
 /.vagrant/
