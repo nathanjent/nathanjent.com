@@ -1,5 +1,7 @@
 {
   "devDependencies": {
     "parcel-bundler": "^1.9.3"
-  }
+  },
+  "license": "MIT",
+  "name": "nathanjent"
 }
