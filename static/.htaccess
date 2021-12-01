@@ -1,7 +1,8 @@
 # loads index.cgi at root of site
-
 RewriteEngine On
-# Rewrite when no file is requested
+# Don't interfere with static files
 RewriteCond %{REQUEST_FILENAME} !-f
-# Rewrite all requests to insert cgi executable/script
-RewriteRule ^(.*)$ /index.cgi/$1 [L]
+RewriteRule ^(.*)$ /index.cgi/$1
+
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^\..+$ - [F,L]

@@ -1,0 +1,28 @@
+---
+- hosts: all
+  become: true
+  roles:
+    - role: geerlingguy.adminer
+    - role: geerlingguy.apache
+      vars:
+        apache_listen_port: 8080
+        apache_remove_default_vhost: true
+        apache_create_vhosts: true
+        apache_vhosts:
+          - servername: dev.vagrant
+            documentroot: /var/www/vhosts/local
+            certificate_file: "/etc/ssl/certs/localhost+2.pem"
+            certificate_key_file: "/etc/ssl/private/localhost+2-key.pem"
+
+  tasks:
+    - name: Copy public cert
+      copy:
+        src: ./certs/localhost+2.pem
+        dest: /etc/ssl/certs/localhost+2.pem
+
+    - name: Copy private cert
+      copy:
+        src: ./certs/localhost+2-key.pem
+        dest: /etc/ssl/private/localhost+2-key.pem
+        group: ssl-cert
+        mode: '0640'
