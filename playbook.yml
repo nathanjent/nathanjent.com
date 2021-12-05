@@ -1,20 +1,56 @@
 ---
 - hosts: all
   become: true
+
+  collections:
+  - community.general
+  - community.mysql
+
   roles:
-    - role: geerlingguy.adminer
     - role: geerlingguy.apache
       vars:
         apache_listen_port: 8080
         apache_remove_default_vhost: true
         apache_create_vhosts: true
+        apache_mods_enabled:
+          - cgi.load
+          - rewrite.load
+          - ssl.load
         apache_vhosts:
           - servername: dev.vagrant
             documentroot: /var/www/vhosts/local
             certificate_file: "/etc/ssl/certs/localhost+2.pem"
             certificate_key_file: "/etc/ssl/private/localhost+2-key.pem"
+            extra_parameters: |
+              <Directory "/var/www/vhosts/local">
+                AllowOverride All
+              </Directory>
 
   tasks:
+    #- name: Ensure pip
+    #  apt:
+    #    pkg:
+    #      - python-pip
+    #      - python-pymysql
+
+    # FIXME Login error when deleting test DB
+    #- name: Ensure MySQL
+    #  include_role:
+    #    name: geerlingguy.mysql
+    #  vars:
+    #    mysql_root_password_update: true
+    #    mysql_databases:
+    #      - name: db1
+    #        state: present
+    #    mysql_users:
+    #      - name: dbuser
+    #        password: db123
+    #        priv: "'db1'.*:ALL"
+
+    #- name: Ensure Adminer
+    #  include_role:
+    #    name: geerlingguy.adminer
+
     - name: Copy public cert
       copy:
         src: ./certs/localhost+2.pem
@@ -26,3 +62,4 @@
         dest: /etc/ssl/private/localhost+2-key.pem
         group: ssl-cert
         mode: '0640'
+

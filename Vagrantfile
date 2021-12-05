@@ -7,10 +7,8 @@ Vagrant.configure("2") do |config|
 
     config.vm.hostname = "dev.vagrant"
     config.vm.synced_folder "./", "/vagrant",
-      disabled: true
+      disabled: false
     config.vm.synced_folder "./www/", "/var/www/vhosts/local",
-      disabled: true
-    config.vm.synced_folder "./static/", "/var/www/vhosts/local",
       disabled: false
 
     config.vm.network "forwarded_port", guest: 8080, host: 8080

@@ -3,27 +3,31 @@ DEBUG_DIR =  $(BACKEND_DIR)/target/debug
 RELEASE_DIR = $(BACKEND_DIR)/target/release
 DEPLOY_DIR = www/nathanjent
 WASM_DIR =  target/wasm32-unknown-unknown/release
+RUST_IMAGE = rust:stretch
 
-.PHONY: all debug release doc test clean
+.PHONY: all buildimage debug release doc test clean
 
 all: release
 
-debug: debugcgi bundleclient
+debug: buildimage debugcgi bundleclient
 
-release: releasecgi bundleclient
+release: buildimage releasecgi bundleclient
 
-clean: cleancgi cleanclient
+clean: buildimage cleancgi cleanclient
+
+buildimage:
+	docker build -t rust:stretch .
 
 debugcgi:
-	cd $(BACKEND_DIR) ; \
-		cargo build ; 
+	docker run --volume ${PWD}:/build ${RUST_IMAGE} \
+		sh -c "cd /build/$(BACKEND_DIR) && cargo build" ;
 	cp -u $(DEBUG_DIR)/nathanjent $(DEPLOY_DIR)/index.cgi ;
 	cp -u static/.htaccess $(DEPLOY_DIR)/ ;
 	cp -u static/.env $(DEPLOY_DIR)/
 
 releasecgi:
-	cd backend ; \
-		cargo build --release ;
+	docker run --volume ${PWD}:/build ${RUST_IMAGE} \
+		sh -c "cd /build/$(BACKEND_DIR) && cargo build --release";
 	cp -u $(RELEASE_DIR)/nathanjent $(DEPLOY_DIR)/index.cgi ; 
 	cp -u static/.htaccess $(DEPLOY_DIR)/ ;
 	cp -u static/.env $(DEPLOY_DIR)/
@@ -40,28 +44,9 @@ test:
 	cargo test
 
 cleancgi:
-	cd backend ; \
-		cargo clean
+	docker run --volume ${PWD}:/build ${RUST_IMAGE} \
+		sh -c "cd /build/$(BACKEND_DIR) && cargo clean";
 	rm -f $(DEPLOY_DIR)/index.cgi
 
 cleanclient:
 	rm -rf $(DEPLOY_DIR)/*
-
-vagrant:
-	vagrant ssh -c "make -C /vagrant"
-
-vbuild:
-	vagrant ssh -c "make -C /vagrant debug"
-
-vrelease:
-	vagrant ssh -c "make -C /vagrant release"
-
-vdoc:
-	vagrant ssh -c "make -C /vagrant doc"
-
-vtest:
-	vagrant ssh -c "make -C /vagrant test"
-
-vclean:
-	vagrant ssh -c "make -C /vagrant clean"
-

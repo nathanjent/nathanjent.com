@@ -1,6 +1,10 @@
 ---
 collections:
   - name: community.general
+  - name: community.mysql
+
 roles:
+  - name: geerlingguy.pip
   - name: geerlingguy.adminer
   - name: geerlingguy.apache
+  - name: geerlingguy.mysql
