@@ -22,8 +22,11 @@
             certificate_file: "/etc/ssl/certs/localhost+2.pem"
             certificate_key_file: "/etc/ssl/private/localhost+2-key.pem"
             extra_parameters: |
-              <Directory "/var/www/vhosts/local">
+              <Directory "/var/www/">
+                Options Indexes FollowSymLinks MultiViews
                 AllowOverride All
+                Order allow,deny
+                allow from all
               </Directory>
 
   tasks:

@@ -1,7 +1,12 @@
 # loads index.cgi at root of site
+Options +ExecCGI
+AddHandler cgi-script .cgi 
+
 RewriteEngine On
+
 # Don't interfere with static files
 RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ /index.cgi/$1
 
 RewriteCond %{REQUEST_FILENAME} -f

@@ -61,7 +61,7 @@ impl FromStr for Query {
                     continue;
                 }
 
-                value = value.trim_left_matches('=');
+                value = value.trim_start_matches('=');
 
                 let v = query_map.entry(key.into())
                     .or_insert(QueryValue::new());

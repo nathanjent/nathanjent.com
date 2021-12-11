@@ -1,145 +1,169 @@
-extern crate backend;
-extern crate common;
-extern crate http_router;
-extern crate http;
-#[macro_use] extern crate diesel;
-
-use backend::*;
-use self::models::*;
-use diesel::prelude::*;
-use http::{Method, StatusCode, Request, Response};
-use std::io::{self, Write};
 use common::Query;
-use http_router::{Handler, RouteBuilder as Router};
+use ::anyhow::Result;
+use ::http::{Method, Request, Response, Version};
+use ::matchit::{Match, Node};
+use ::outer_cgi::IO;
+use http::StatusCode;
 
-fn main() {
-    let mut router = Router::new();
-    router.get("/id", handle_id);
+use std::borrow::Cow;
+use std::collections::HashMap;
+use std::io;
+use std::str::FromStr;
 
-    let status = match start(router) {
-        Ok(_) => 0,
-        Err(e) => {
-            writeln!(io::stdout(),
-                     "Status: 500\r\n\r\n
-                     <h1>500 Internal Server \
-                      Error</h1>
-                     <p>{}</p>",
-                     e)
-                .expect("Panic writing Server Error to STDOUT!");
-            1
-        }
+fn handler(io: &mut dyn IO, env: HashMap<String, String>) -> io::Result<i32> {
+    let mut request_body = Vec::new();
+    let size = io.read_to_end(&mut request_body)?;
+
+    let response = match handle(&*request_body, size, &env) {
+        Ok(response) => response,
+        Err(err) => Response::builder()
+            .status(StatusCode::INTERNAL_SERVER_ERROR)
+            .body(
+                format!(
+                    r#"<h1>500 Server Error</h1>
+<p>{}</p>
+"#,
+                    err
+                )
+                .into(),
+            )
+            .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))?,
     };
-    ::std::process::exit(status);
+
+    let body = response.body();
+    let header_str: String = response
+        .headers()
+        .iter()
+        .map(|(key, value)| (key.as_str(), value.to_str()))
+        .filter(|(_key, value)| value.is_ok())
+        .map(|(key, value)| (key, value.unwrap()))
+        .map(|(key, value)| {
+            format!(
+                r#"{}: {}
+"#,
+                key, value,
+            )
+        })
+        .collect();
+
+    io.write_all(
+        format!(
+            r#"{}
+
+{}
+"#,
+            header_str, body
+        )
+        .as_bytes(),
+    )?;
+    Ok(0)
 }
 
-fn handle_id<'r>(req: &mut Request<&'r [u8]>) -> Result<Response<&'r [u8]>, http::Error> {
-    Response::builder()
-        .status(StatusCode::OK)
-        .body(&b""[..])
-}
-
-fn start<'r, H>(handler: H) -> common::Result<()>
-    where H: Handler<&'r [u8], &'r [u8]> + 'static + Sync
-{
-    let conn = establish_connection();
-
-    let mut out = String::new();
-    if let Ok(ref mut request) = common::build_request_from_env() {
-        common::send_response(&request, io::stdout(), || {
-            let request_triple = (
-                request.method(),
-                request.uri().path(),
-                request.uri().query()
-                );
-            let response = match request_triple {
-                (&Method::GET, "/", None) => {
-                    Response::builder()
-                        .status(StatusCode::OK)
-                        .body(&b"hello"[..])
-                }
-                (&Method::GET, "/env", None) => {
-                    out = ::std::env::vars()
-                        .map(|(k, v)| k + ":" + &v + "\r")
-                        .collect();
-                    Response::builder()
-                        .status(StatusCode::OK)
-                        .body(&out.as_bytes()[..])
-                }
-                (&Method::GET, "/headers", None) => {
-                    out = request.headers()
-                        .iter()
-                        .map(|(k, ref v)| {
-                            format!("{}:{}\r", k.as_str(), v.to_str().unwrap())
-                        })
-                        .collect();
-                    Response::builder()
-                        .status(StatusCode::OK)
-                        .body(&out.as_bytes()[..])
-                }
-                (&Method::GET, "/world", None) => {
-                    Response::builder()
-                        .status(StatusCode::OK)
-                        .body(&b"Hello world!"[..])
-                }
-                (&Method::GET, "/note", Some(query_str)) => {
-                    use schema::notes::dsl::*;
-                    let mut res_builder = Response::builder();
-                    res_builder.status(StatusCode::BAD_REQUEST);
-                    if let Ok(query) = query_str.parse::<Query>() {
-                        let query: Query = query;
-                        if let Some(query_str) = query.get_first("query_id") {
-                            if let Ok(query_id) = query_str.parse::<i32>() {
-                               let result = notes
-                                    //.filter(published.eq(true))
-                                    .find(query_id)
-                                    .first::<Note>(&conn);
-                                if let Ok(result) = result {
-                                    res_builder.status(StatusCode::OK);
-                                    out.push_str(&*result.text.unwrap());
-                                } else {
-                                    res_builder.status(StatusCode::NOT_FOUND);
-                                }
-                            }
-                        }
-                    }
-                    res_builder.body(&out.as_bytes()[..])
-                }
-                (&Method::POST, "/note", Some(query_str)) => {
-                    use schema::notes::dsl::notes;
-                    let mut res_builder = Response::builder();
-                    res_builder.status(StatusCode::BAD_REQUEST);
-                    if let Ok(query) = query_str.parse::<Query>() {
-                        let query: Query = query;
-                        if let Some(title) = query.get_first("title") {
-                            if let Some(text) = query.get_first("text") {
-                                let new_note = NewNote {
-                                    title,
-                                    text,
-                                };
-
-                                let result = diesel::insert(&new_note)
-                                    .into(notes)
-                                    .execute(&conn);
-                                    
-                                if let Ok(result) = result {
-                                    res_builder.status(StatusCode::OK);
-                                } else {
-                                    res_builder.status(StatusCode::NOT_FOUND);
-                                }
-                            }
-                        }
-                    }
-                    res_builder.body(&b""[..])
-                }
-                _ => {
-                    Response::builder()
-                        .status(StatusCode::BAD_REQUEST)
-                        .body(&b""[..])
-                }
-            };
-            response.expect("HTTP Routing failed")
-        })?;
+fn handle<'a>(
+    request_body: &'a [u8],
+    size: usize,
+    env: &'a HashMap<String, String>,
+) -> Result<Response<Cow<'a, str>>> {
+    if let Some(content_length_str) = env.get("CONTENT_LENGTH") {
+        if let Ok(content_length) = usize::from_str(content_length_str) {
+            if content_length != size {
+                let response = Response::builder().status(StatusCode::BAD_REQUEST).body(
+                    format!(
+                        r#"<h1>Content Length Unmatched</h1>
+<p>The content length, {}, does not match the size of the content, {}.</p>
+"#,
+                        content_length, size
+                    )
+                    .into(),
+                )?;
+                return Ok(response);
+            }
+        }
     }
 
-    Ok(())
+    let request = create_request(&request_body, &env)?;
+    let response = handle_request(request)?;
+
+    Ok(response)
+}
+
+fn create_request<'a>(io: &'a [u8], env: &'a HashMap<String, String>) -> Result<Request<&'a [u8]>> {
+    let request = Request::builder()
+        .method(match env.get("REQUEST_METHOD") {
+            Some(method) => Method::from_str(method)?,
+            None => Method::GET,
+        })
+        .uri(
+            &*env
+                .get("REQUEST_URI")
+                .ok_or(io::Error::new(io::ErrorKind::NotFound, ""))?,
+        )
+        .version(match &*env["SERVER_PROTOCOL"] {
+            "HTTP/0.9" => Version::HTTP_09,
+            "HTTP/1.0" | "HTTP/1" => Version::HTTP_10,
+            "HTTP/1.1" => Version::HTTP_11,
+            "HTTP/2.0" | "HTTP/2" => Version::HTTP_2,
+            _ => Version::HTTP_10,
+        })
+        .body(io)?;
+    Ok(request)
+}
+
+fn handle_request<'a>(req: Request<&'a [u8]>) -> Result<Response<Cow<'a, str>>> {
+    let router = route()?;
+    let Match { value, params } = router.at(req.uri().path())?;
+    let response = match value {
+        0 => Response::builder().body("Welcome".into())?,
+        1 => Response::builder().body(format!("id: {}", params.get("id").unwrap_or("0")).into())?,
+        2 => Response::builder().body(::std::env::vars()
+            .map(|(key, value)| format!("{}: {}\r", key, &value))
+            .collect())?,
+        3 => Response::builder().body(req
+            .headers()
+            .iter()
+            .map(|(key, value)| (key.as_str(), value.to_str()))
+            .filter(|(_key, value)| value.is_ok())
+            .map(|(key, value)| format!("{}: {}\r", key, value.unwrap()))
+            .collect())?,
+        // FIXME borrowing issue on get_first
+        //4 => {
+        //    if let Some(query_str) = req.uri().query() {
+        //        if let Ok(query) = query_str.parse::<Query>() {
+        //            if let Some(query_str) = query.get_first("query_id") {
+        //                query_str.into()
+        //            } else {
+        //                "".into()
+        //            }
+        //        } else {
+        //            "".into()
+        //        }
+        //    } else {
+        //        "".into()
+        //    }
+        //},
+        _ => {
+            Response::builder()
+                .status(StatusCode::BAD_REQUEST)
+            .body("Unknown".into())?  
+        },
+    };
+    Ok(response)
+}
+
+fn route() -> Result<Node<u32>> {
+    let mut matcher = Node::new();
+    matcher.insert("/", 0)?;
+    matcher.insert("/user/:id", 1)?;
+    matcher.insert("/env", 2)?;
+    matcher.insert("/headers", 3)?;
+
+    Ok(matcher)
+}
+
+fn init(_max_connections: u32) {
+    // TODO Somehow define router matches here
+}
+
+fn main() {
+    outer_cgi::main(init, handler)
 }

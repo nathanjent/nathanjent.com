@@ -9,8 +9,11 @@
 # Vagrant files
 /.vagrant/
 
+# Ansible
+roles/
+
 # Private configuration files
 .env
 
 # Generated files
-www/nathanjent/
+www/

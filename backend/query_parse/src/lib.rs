@@ -9,7 +9,7 @@ pub use query::{Query, QueryValue};
 #[cfg(test)]
 mod tests {
     use super::{encode, decode};
-    use super::{Query, QueryValue};
+    use super::Query;
 
     const DECODED: &str = "title=Encode some URLs";
     const ENCODED: &str = "title%3DEncode%20some%20URLs";
