@@ -125,22 +125,7 @@ fn handle_request<'a>(req: Request<&'a [u8]>) -> Result<Response<Cow<'a, str>>> 
             .filter(|(_key, value)| value.is_ok())
             .map(|(key, value)| format!("{}: {}\r", key, value.unwrap()))
             .collect())?,
-        // FIXME borrowing issue on get_first
-        //4 => {
-        //    if let Some(query_str) = req.uri().query() {
-        //        if let Ok(query) = query_str.parse::<Query>() {
-        //            if let Some(query_str) = query.get_first("query_id") {
-        //                query_str.into()
-        //            } else {
-        //                "".into()
-        //            }
-        //        } else {
-        //            "".into()
-        //        }
-        //    } else {
-        //        "".into()
-        //    }
-        //},
+        4 => handle_note_request(req)?,
         _ => {
             Response::builder()
                 .status(StatusCode::BAD_REQUEST)
@@ -150,12 +135,26 @@ fn handle_request<'a>(req: Request<&'a [u8]>) -> Result<Response<Cow<'a, str>>> 
     Ok(response)
 }
 
+fn handle_note_request<'a>(req: Request<&'a [u8]>) -> Result<Response<Cow<'a, str>>> {
+    let mut response = Response::builder().body("".into())?;
+    if let Some(query_str) = req.uri().query() {
+        if let Ok(query) = query_str.parse::<Query>() {
+            if let Some(query_str) = query.get_first("query_id") {
+                response = Response::builder().body(query_str.to_string().into())?;
+            }
+        }
+    }
+
+    Ok(response)
+}
+
 fn route() -> Result<Node<u32>> {
     let mut matcher = Node::new();
     matcher.insert("/", 0)?;
     matcher.insert("/user/:id", 1)?;
     matcher.insert("/env", 2)?;
     matcher.insert("/headers", 3)?;
+    matcher.insert("/note", 4)?;
 
     Ok(matcher)
 }
