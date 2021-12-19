@@ -4,19 +4,19 @@ mod query;
 
 pub use urlencoding::{encode, decode};
 
-pub use query::{Query, QueryValue};
+pub use query::{QueryStr, QueryValue};
 
 #[cfg(test)]
 mod tests {
     use super::{encode, decode};
-    use super::Query;
+    use super::QueryStr;
 
     const DECODED: &str = "title=Encode some URLs";
     const ENCODED: &str = "title%3DEncode%20some%20URLs";
 
     #[test]
     fn parse_query_test() {
-        if let Ok(query) = ENCODED.parse::<Query>() {
+        if let Ok(query) = ENCODED.parse::<QueryStr>() {
             assert_eq!(Some(&"Encode some URLs".to_string()), query.get_first("title"));
         } else {
             assert!(false);
@@ -30,7 +30,7 @@ mod tests {
             "banana".to_string(),
             "coconut".to_string(),
         ];
-        if let Ok(query) = "fruits=apple,banana,coconut".parse::<Query>() {
+        if let Ok(query) = "fruits=apple,banana,coconut".parse::<QueryStr>() {
             assert_eq!(Some(&expected), query.get("fruits"));
         } else {
             assert!(false);

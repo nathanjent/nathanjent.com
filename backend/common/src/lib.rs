@@ -8,6 +8,6 @@ mod static_content;
 
 pub use errors::Error;
 pub use static_content::get_page;
-pub use query_parse::{Query, QueryValue};
+pub use query_parse::{QueryStr, QueryValue};
 
 pub type Result<T> = std::result::Result<T, errors::Error>;

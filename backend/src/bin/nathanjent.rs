@@ -1,14 +1,46 @@
-use common::Query;
-use ::anyhow::Result;
-use ::http::{Method, Request, Response, Version};
-use ::matchit::{Match, Node};
-use ::outer_cgi::IO;
-use http::StatusCode;
+use anyhow::Result;
+use common::QueryStr;
+use http::{Method, Request, Response, StatusCode, Version};
+use matchit::{Match, Node};
+use mysql::prelude::*;
+use mysql::*;
+use outer_cgi::IO;
+use sea_query::Expr;
+use sea_query::{
+    ConditionalStatement, Iden, MysqlQueryBuilder, Order, Query as SeaQuery, Value as SeaValue,
+    Values as SeaValues,
+};
 
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::io;
 use std::str::FromStr;
+
+#[derive(Debug, Iden)]
+#[iden = "notes"]
+pub enum NoteTable {
+    Table,
+    Id,
+    Name,
+    Content,
+}
+
+#[derive(Debug)]
+struct Note {
+    id: u64,
+    name: String,
+    content: String,
+}
+
+impl FromRow for Note {
+    fn from_row_opt(mut row: Row) -> Result<Self, mysql::FromRowError> {
+        Ok(Note {
+            id: row.take(0).unwrap(),
+            name: row.take(1).unwrap(),
+            content: row.take(2).unwrap(),
+        })
+    }
+}
 
 fn handler(io: &mut dyn IO, env: HashMap<String, String>) -> io::Result<i32> {
     let mut request_body = Vec::new();
@@ -41,7 +73,7 @@ fn handler(io: &mut dyn IO, env: HashMap<String, String>) -> io::Result<i32> {
             format!(
                 r#"{}: {}
 "#,
-                key, value,
+                key, value
             )
         })
         .collect();
@@ -110,37 +142,56 @@ fn create_request<'a>(io: &'a [u8], env: &'a HashMap<String, String>) -> Result<
 }
 
 fn handle_request<'a>(req: Request<&'a [u8]>) -> Result<Response<Cow<'a, str>>> {
+    let url = std::env::var("DB_CONNECTION_STR")?;
+    let pool = Pool::new(Opts::from_url(url.as_str())?)?;
     let router = route()?;
     let Match { value, params } = router.at(req.uri().path())?;
+    // TODO path error should send a 400 response
     let response = match value {
         0 => Response::builder().body("Welcome".into())?,
         1 => Response::builder().body(format!("id: {}", params.get("id").unwrap_or("0")).into())?,
-        2 => Response::builder().body(::std::env::vars()
-            .map(|(key, value)| format!("{}: {}\r", key, &value))
-            .collect())?,
-        3 => Response::builder().body(req
-            .headers()
-            .iter()
-            .map(|(key, value)| (key.as_str(), value.to_str()))
-            .filter(|(_key, value)| value.is_ok())
-            .map(|(key, value)| format!("{}: {}\r", key, value.unwrap()))
-            .collect())?,
-        4 => handle_note_request(req)?,
-        _ => {
-            Response::builder()
-                .status(StatusCode::BAD_REQUEST)
-            .body("Unknown".into())?  
-        },
+        2 => Response::builder().body(
+            ::std::env::vars()
+                .map(|(key, value)| format!("{}: {}\r", key, &value))
+                .collect(),
+        )?,
+        3 => Response::builder().body(
+            req.headers()
+                .iter()
+                .map(|(key, value)| (key.as_str(), value.to_str()))
+                .filter(|(_key, value)| value.is_ok())
+                .map(|(key, value)| format!("{}: {}\r", key, value.unwrap()))
+                .collect(),
+        )?,
+        4 => handle_note_request(req, &pool)?,
+        _ => Response::builder()
+            .status(StatusCode::BAD_REQUEST)
+            .body("Unknown".into())?,
     };
     Ok(response)
 }
 
-fn handle_note_request<'a>(req: Request<&'a [u8]>) -> Result<Response<Cow<'a, str>>> {
+fn handle_note_request<'a>(req: Request<&'a [u8]>, pool: &Pool) -> Result<Response<Cow<'a, str>>> {
+    let mut conn = pool.get_conn()?;
     let mut response = Response::builder().body("".into())?;
     if let Some(query_str) = req.uri().query() {
-        if let Ok(query) = query_str.parse::<Query>() {
-            if let Some(query_str) = query.get_first("query_id") {
-                response = Response::builder().body(query_str.to_string().into())?;
+        if let Ok(query_str) = query_str.parse::<QueryStr>() {
+            if let Some(query_str) = query_str.get_first("id") {
+                if let Ok(id) = query_str.parse::<u32>() {
+                    let (sql, values) = SeaQuery::select()
+                        .columns(vec![NoteTable::Id, NoteTable::Name, NoteTable::Content])
+                        .from(NoteTable::Table)
+                        .and_where(Expr::col(NoteTable::Id).eq(id))
+                        .order_by(NoteTable::Id, Order::Desc)
+                        .limit(1)
+                        .build(MysqlQueryBuilder);
+                    let params = into_mysql_values(&values);
+                    let stmt = conn.prep(&sql)?;
+                    let row: Option<Note> = conn.exec_first(stmt, &params)?;
+                    if let Some(note) = row {
+                        response = Response::builder().body(format!("{:?}", note).into())?;
+                    }
+                }
             }
         }
     }
@@ -161,8 +212,59 @@ fn route() -> Result<Node<u32>> {
 
 fn init(_max_connections: u32) {
     // TODO Somehow define router matches here
+    zenv::zenv!();
 }
 
 fn main() {
     outer_cgi::main(init, handler)
+}
+
+fn into_mysql_value(value: &SeaValue) -> Option<Value> {
+    match value {
+        // TODO add conversion for other value types
+        SeaValue::Int(v) => Some(Value::from(v)),
+        SeaValue::BigUnsigned(v) => Some(Value::from(v)),
+        _ => None,
+    }
+}
+
+fn into_mysql_values(values: &SeaValues) -> Vec<Value> {
+    values
+        .iter()
+        .map(into_mysql_value)
+        .filter(Option::is_some)
+        .map(Option::unwrap)
+        .collect::<Vec<Value>>()
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::into_mysql_values;
+    use crate::NoteTable;
+    use mysql::Value as MySqlValue;
+    use sea_query::{Expr, MysqlQueryBuilder, Order, Query, Value, Values};
+
+    #[test]
+    fn sea_query() {
+        let (sql, values) = Query::select()
+            .columns(vec![NoteTable::Id, NoteTable::Name, NoteTable::Content])
+            .from(NoteTable::Table)
+            .and_where(Expr::col(NoteTable::Id).eq(1))
+            .order_by(NoteTable::Id, Order::Desc)
+            .limit(1)
+            .build(MysqlQueryBuilder);
+
+        assert_eq!(
+            sql,
+            "SELECT `id`, `name`, `content` FROM `notes` WHERE `id` = ? ORDER BY `id` DESC LIMIT ?"
+        );
+        assert_eq!(
+            &values,
+            &Values(vec![Value::Int(Some(1)), Value::BigUnsigned(Some(1)),])
+        );
+
+        let expected = vec![MySqlValue::from(1), MySqlValue::from(1u64)];
+        let actual = into_mysql_values(&values);
+        assert_eq!(expected, actual);
+    }
 }

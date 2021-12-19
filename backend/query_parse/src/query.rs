@@ -10,14 +10,16 @@ pub type QueryValue = Vec<String>;
 type QueryMap = HashMap<String, QueryValue>;
 
 #[derive(Debug)]
-pub struct Query {
+pub struct QueryStr {
     map: QueryMap,
 }
 
+#[allow(dead_code)]
 pub struct ParseQueryError {
     kind: QueryErrorKind,
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 enum QueryErrorKind {
     InvalidQuery,
@@ -25,7 +27,7 @@ enum QueryErrorKind {
 
 /// Borrowed query string parser ideas from
 /// [rust-urlparse](https://github.com/yykamei/rust-urlparse)
-impl Query {
+impl QueryStr {
     pub fn get(&self, k: &str) -> Option<&QueryValue> {
         self.map.get(k)
     }
@@ -43,7 +45,7 @@ impl Query {
     }
 }
 
-impl FromStr for Query {
+impl FromStr for QueryStr {
     type Err = ParseQueryError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -71,6 +73,6 @@ impl FromStr for Query {
             }
         }
 
-        Ok(Query { map: query_map })
+        Ok(QueryStr { map: query_map })
     }
 }

@@ -1,10 +1,9 @@
 ---
 - hosts: all
   become: true
-
-  collections:
-  - community.general
-  - community.mysql
+  vars:
+    # Fixes login error when deleting test DB
+    ansible_python_interpreter: /usr/bin/python3
 
   roles:
     - role: geerlingguy.apache
@@ -28,31 +27,30 @@
                 Order allow,deny
                 allow from all
               </Directory>
+    - role: geerlingguy.php
+    - role: geerlingguy.php-mysql
+    - role: geerlingguy.adminer
+      vars:
+        adminer_add_apache_config: true
 
   tasks:
-    #- name: Ensure pip
-    #  apt:
-    #    pkg:
-    #      - python-pip
-    #      - python-pymysql
+    - name: Ensure dependencies for MySQL roles
+      apt:
+        pkg:
+          - python-pymysql
 
-    # FIXME Login error when deleting test DB
-    #- name: Ensure MySQL
-    #  include_role:
-    #    name: geerlingguy.mysql
-    #  vars:
-    #    mysql_root_password_update: true
-    #    mysql_databases:
-    #      - name: db1
-    #        state: present
-    #    mysql_users:
-    #      - name: dbuser
-    #        password: db123
-    #        priv: "'db1'.*:ALL"
-
-    #- name: Ensure Adminer
-    #  include_role:
-    #    name: geerlingguy.adminer
+    - name: Ensure MySQL
+      include_role:
+        name: geerlingguy.mysql
+      vars:
+        mysql_databases:
+          - name: vagrant
+            state: present
+        mysql_users:
+          - name: vagrant
+            password: vagrant
+            priv: "vagrant.*:ALL"
+            append_privs: true
 
     - name: Copy public cert
       copy:

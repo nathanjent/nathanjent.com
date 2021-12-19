@@ -5,8 +5,3 @@ version = "0.1.0"
 
 [dependencies]
 query_params = "0.1.0"
-
-# Shared with backend
-[dependencies.core]
-path = "../core"
-version = "0.1.0"

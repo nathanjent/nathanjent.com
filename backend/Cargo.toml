@@ -5,18 +5,31 @@ authors = ["nathanjent <nathanjent@gmail.com>"]
 edition = "2021"
 
 [dependencies]
-dotenv = "0.15.0"
 outer_cgi = "0.2.3"
 http = "0.2.5"
 matchit = "0.4.4"
 anyhow = "1.0"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
+serde = { version = "^1", features = ["derive"] }
+serde_json = "^1"
+common = { version = "^0", path = "common" }
+chrono = "^0"
+uuid = { version = "^0", features = ["serde", "v4"] }
+rust_decimal = "^1"
+bigdecimal = "^0.3"
+mysql = "21.0"
+zenv = "0.7.1"
 
-common = { version = "0.2.0", path = "common" }
-
-# Shared with frontend
-core = { version = "0.1.0", path = "../core" }
+[dependencies."sea-query"]
+version = "^0"
+features = [
+    "backend-mysql",
+    "derive",
+    "with-chrono",
+    "with-json",
+    "with-rust_decimal",
+    "with-bigdecimal",
+    "with-uuid"
+] 
 
 [workspace]
 members = ["common", "query_parse"]
