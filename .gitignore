@@ -1,4 +1,19 @@
-/target/
+# Rust files
+**/target/
 **/*.rs.bk
-www/nathanjent/
+
+# JavaScript files
+**/node_modules/
+**/.cache/
+
+# Vagrant files
 /.vagrant/
+
+# Ansible
+roles/
+
+# Private configuration files
+.env
+
+# Generated files
+www/

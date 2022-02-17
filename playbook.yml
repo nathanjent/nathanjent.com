@@ -1,0 +1,66 @@
+---
+- hosts: all
+  become: true
+  vars:
+    # Fixes login error when deleting test DB
+    ansible_python_interpreter: /usr/bin/python3
+
+  roles:
+    - role: geerlingguy.apache
+      vars:
+        apache_listen_port: 8080
+        apache_remove_default_vhost: true
+        apache_create_vhosts: true
+        apache_mods_enabled:
+          - cgi.load
+          - rewrite.load
+          - ssl.load
+        apache_vhosts:
+          - servername: dev.vagrant
+            documentroot: /var/www/vhosts/local
+            certificate_file: "/etc/ssl/certs/localhost+2.pem"
+            certificate_key_file: "/etc/ssl/private/localhost+2-key.pem"
+            extra_parameters: |
+              <Directory "/var/www/">
+                Options Indexes FollowSymLinks MultiViews
+                AllowOverride All
+                Order allow,deny
+                allow from all
+              </Directory>
+    - role: geerlingguy.php
+    - role: geerlingguy.php-mysql
+    - role: geerlingguy.adminer
+      vars:
+        adminer_add_apache_config: true
+
+  tasks:
+    - name: Ensure dependencies for MySQL roles
+      apt:
+        pkg:
+          - python-pymysql
+
+    - name: Ensure MySQL
+      include_role:
+        name: geerlingguy.mysql
+      vars:
+        mysql_databases:
+          - name: vagrant
+            state: present
+        mysql_users:
+          - name: vagrant
+            password: vagrant
+            priv: "vagrant.*:ALL"
+            append_privs: true
+
+    - name: Copy public cert
+      copy:
+        src: ./certs/localhost+2.pem
+        dest: /etc/ssl/certs/localhost+2.pem
+
+    - name: Copy private cert
+      copy:
+        src: ./certs/localhost+2-key.pem
+        dest: /etc/ssl/private/localhost+2-key.pem
+        group: ssl-cert
+        mode: '0640'
+

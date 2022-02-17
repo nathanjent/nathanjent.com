@@ -2,6 +2,7 @@
 authors = ["nathanjent <nathanjent@gmail.com>"]
 name = "query_parse"
 version = "0.1.0"
+edition = "2021"
 
 [dependencies]
-urlencoding = "1.0"
+urlencoding = "2.1.0"

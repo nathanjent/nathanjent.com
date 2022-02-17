@@ -1,5 +1,3 @@
-//use diesel::result::Error as DbError;
-use diesel::result::ConnectionError as DbError;
 use http::Error as HttpError;
 use std::error::Error as StdError;
 use std::io::Error as IoError;
@@ -9,7 +7,6 @@ use std::fmt;
 pub enum Error {
     HttpError(HttpError),
     IoError(IoError),
-    DbError(DbError),
 }
 
 
@@ -25,22 +22,15 @@ impl From<IoError> for Error {
     }
 }
 
-impl From<DbError> for Error {
-    fn from(error: DbError) -> Self {
-        Error::DbError(error)
-    }
-}
-
 impl StdError for Error {
     fn description(&self) -> &str {
         match *self {
             Error::HttpError(_) => "http error",
             Error::IoError(_) => "io error",
-            Error::DbError(_) => "db error",
         }
     }
 
-    fn cause(&self) -> Option<&StdError> {
+    fn cause(&self) -> Option<&dyn StdError> {
         match *self {
             _ => None,
         }
@@ -52,7 +42,6 @@ impl fmt::Display for Error {
         match *self {
             Error::HttpError(ref msg) => write!(fmt, "HTTP error {}", msg),
             Error::IoError(ref msg) => write!(fmt, "IO error {}", msg),
-            Error::DbError(ref msg) => write!(fmt, "Database error {}", msg),
         }
     }
 }

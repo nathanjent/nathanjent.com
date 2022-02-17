@@ -1,6 +1,3 @@
-extern crate common;
-#[macro_use] extern crate query_params;
-
 #[derive(QueryParams)]
 pub struct PageRequest {
     pub page: i32,
