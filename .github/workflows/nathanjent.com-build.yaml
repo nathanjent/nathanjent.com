@@ -15,9 +15,10 @@ on:
 
 env:
   DEPLOYMENT_FOLDER: _site
+  COBALT_VERSION: 'v0.19.2'
 
 jobs:
-# Please do not rename this job
+# Please do not rename this job. It is used by ionos deploy now.
   build-project:
     name: build nathanjent.com
     runs-on: ubuntu-latest
@@ -27,14 +28,23 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - name: Run script
-# uncomment the following lines if you want to add environment variables for this step
-#        env:
-#          MY_ENV_VAR: value-for-my-env-var
-#          MY_SECRET_ENV_VAR: ${{ secrets.MY_SECRET }} # here you can find information how to create secrets: https://docs.github.com/en/actions/security-guides/encrypted-secrets
-        run: cobalt build
+      - name: Download Cobalt Release
+        uses: Legion2/download-release-action@v2.1.0
+        with:
+          repository: cobalt-org/cobalt.rs
+          tag: ${{ env.COBALT_VERSION }}
+          file: cobalt-${{ env.COBALT_VERSION }}-x86_64-unknown-linux-gnu.tar.gz
 
-# Please do not touch the following action
+      - name: Extract Cobalt Binary
+        run: tar -xzf cobalt-$COBALT_VERSION-x86_64-unknown-linux-gnu.tar.gz ./cobalt
+
+      - name: Build
+        run: ./cobalt build
+
+      - name: Clean
+        run: rm -f ./cobalt ./cobalt-*.tar.gz
+
+# Please do not touch the following action. It is used by ionos deploy now.
       - name: Store deployment content
         uses: ionos-deploy-now/artifact-action@v1
         with:
