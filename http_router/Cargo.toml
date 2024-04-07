@@ -1,8 +1,0 @@
-[package]
-authors = ["Nathan Jent <nathanjent@gmail.com>"]
-name = "http_router"
-version = "0.1.0"
-
-[dependencies]
-http = "0.1.0"
-route-recognizer = "0.1.12"
