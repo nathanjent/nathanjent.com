@@ -3,8 +3,10 @@ layout: default.liquid
 ---
 ## Blog!
 
-{% for post in collections.posts.pages %}
-#### {{post.title}}
+{% for page in collections.posts.pages %}
+#### {{ post.title }}
+
+{{ post.excerpt }}
 
 [{{ post.title }}]({{ post.permalink }})
 {% endfor %}

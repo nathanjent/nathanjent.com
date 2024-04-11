@@ -1,7 +1,10 @@
 source: ./src
 site:
   title: Nathan Jent
-  description: Blog Posts Go Here
+  description: Personal posts from Nathan
   base_url: http://nathanjent.com
 posts:
   rss: rss.xml
+ignore:
+  - LICENSE
+  - README.md

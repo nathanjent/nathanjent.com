@@ -1,5 +1,6 @@
 ---
 layout: default.liquid
+title: Articles
 ---
 ## Blog!
 

@@ -1,13 +1,36 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8">
-        <title>{{ page.title }}</title>
-    </head>
-    <body>
-    <div>
+
+  <head>
+    <meta charset="utf-8">
+    <meta
+      name="viewport"
+      content="width=device-width">
+    <title>{{ site.title }} - {{ page.title }}</title>
+    <link
+      rel="stylesheet"
+      href="/style.css"
+      type="text/css"
+      media="all" />
+    <link
+      rel="alternate"
+      href="/rss.xml"
+      type="application/rss+xml"
+      title="RSS" />
+  </head>
+
+  <body>
+    <header class="main-header">
+      <a href="/"><h1>{{ site.title }}</h1></a>
       <h2>{{ page.title }}</h2>
+    </header>
+
+    {% include "_mainmenu.liquid" %}
+
+    <main class="main-content">
       {{ page.content }}
-    </div>
+    </main>
+
+    {% include "_footer.liquid" %}
   </body>
 </html>
