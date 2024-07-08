@@ -1,7 +1,7 @@
 ---
 layout: default.liquid
 ---
-## Blog!
+## News
 
 {% for page in collections.posts.pages %}
 #### {{ post.title }}
