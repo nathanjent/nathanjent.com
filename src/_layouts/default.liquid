@@ -11,18 +11,36 @@
       rel="stylesheet"
       href="/style.css"
       type="text/css"
-      media="all" />
+      media="all" 
+      />
     <link
       rel="alternate"
       href="/rss.xml"
       type="application/rss+xml"
-      title="RSS" />
+      title="RSS"
+      />
+    <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+    />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+      />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@100..900&display=swap"
+      rel="stylesheet"
+      />
   </head>
 
   <body>
     <header class="main-header">
-      <a href="/"><h1>{{ site.title }}</h1></a>
-      <h2>{{ page.title }}</h2>
+      <a href="/" class="header-site-logo" >
+        <img class="circle-mask" src="/static/self.svg" alt="{{ site.title }}" />
+      </a>
+        {{ site.title }}
+      <h2 class="header-page-title">{{ page.title }}</h2>
     </header>
 
     {% include "_mainmenu.liquid" %}
