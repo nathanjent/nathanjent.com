@@ -1,10 +1,10 @@
 ---
 layout: default.liquid
 
-title: First Post
+title: Default Post
 is_draft: true
 ---
 
-# This is our first Post!
+# This is the Default Post
 
-Welcome to the first post ever on cobalt.rs!
+The default post is this one.
